@@ -227,10 +227,12 @@ class TenderlyVnet:
                               last_vnet.get('rpcs')[0].get('url'), last_vnet.get('rpcs')[2].get('url'))
         return vnet
 
-    async def get_latest_vnet(self, save: bool = False, as_dict: bool = False) -> VirtualNetwork | dict:
+    async def get_latest_vnet(self, save: str = None, as_dict: bool = False) -> VirtualNetwork | dict:
+
         vnet = await self.get_vnet_by_index(0)
-        if save:
-            self.json_helper.dump_json(vnet.as_dict(), 'configs/%s.json' % vnet.slug)
+        if save is not None:
+            save_f_name = save
+            self.json_helper.dump_json(vnet.as_dict(), 'configs/%s.json' % save_f_name)
         if as_dict:
             return vnet.as_dict()
         return vnet
@@ -295,7 +297,7 @@ def cli_main():
     dotenv.load_dotenv()
     cli_args = argparse.ArgumentParser()
     cli_args.add_argument('--debug', action='store_true', help='Enable intensely verbose debug data.')
-    cli_args.add_argument('--chain-id', dest='chain_id', type=int, default=1)
+    cli_args.add_argument('--chain-id', '--cid', dest='chain_id', type=int, default=8453)
     cli_args.add_argument('--config', type=str, help='Config located in ./configs with the vnet data')
     subparsers = cli_args.add_subparsers(dest='command')
     create = subparsers.add_parser('create', help='Create a new virtual forked nnetwork')
@@ -306,7 +308,7 @@ def cli_main():
     get_vnet = subparsers.add_parser('get', help='Get all or a specific vnet')
     get_vnet.add_argument('--id', dest='vnet_id', default=None, help='ID of specific vnet')
     get_vnet.add_argument('--latest', action='store_true', help='Get the most recently created vnet')
-    get_vnet.add_argument('--save', action='store_true', help='Save the vnet to a json file')
+    get_vnet.add_argument('--save', type=str, default=None, help='Save the vnet to a json file')
     fund = subparsers.add_parser('fund')
 
     fund.add_argument('account', type=str, help='Account to top up.')
@@ -332,6 +334,8 @@ def cli_main():
             coro = api.get_vnet(cli_args.vnet_id)
         else:
             if cli_args.latest:
+                if cli_args.save is None:
+                    cli_args.save = 'last'
                 coro = api.get_latest_vnet(cli_args.save, True)
             else:
                 coro = api.get_all_vnet()
