@@ -52,4 +52,11 @@ options:
     - ` python -m tenderly --chain-id 1 create UniqueNetName`
 - get a vnet (i.e. the last created) : 
   - `python -m tenderly get --latest`
-- 
+- fund an account with 10 Ether:
+  - `python -m tenderly --config last.json fund 0x1234567890123456789012345678901234567890` 10
+
+#### TODO:
+ - add rest of API functions
+ - better state override handling 
+ - state over-ride via config files
+ - probably more ... 
