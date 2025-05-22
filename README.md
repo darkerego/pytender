@@ -1,5 +1,10 @@
 # PyTender
 
+
+<p>
+Copyright [Darkerego](https://github.com/darkerego) ~  2025 ~ MIT License  
+</p>
+
 ## tenderly lib & cli tool in python
 
 #### Installation
@@ -29,21 +34,21 @@ python3 setup.py install
 
 <pre>
 
-python -m tenderly --help
-usage: __main__.py [-h] [--debug] [--chain-id CHAIN_ID] [--config CONFIG] {create,get,fund,clock} ...
+$ python3 -m tenderly --help
+usage: __main__.py [-h] [--debug] [--chain-id CHAIN_ID] [--config CONFIG] {create,get,fund,clock,test} ...
 
 positional arguments:
-  {create,get,fund,clock}
+  {create,get,fund,clock,test}
     create              Create a new virtual forked nnetwork
     get                 Get all or a specific vnet
     clock               Change various evm global attributes such as block time
+    test                Test a vnet with AsyncWeb3. Perform a few view only calls.
 
 options:
   -h, --help            show this help message and exit
   --debug               Enable intensely verbose debug data.
-  --chain-id CHAIN_ID
+  --chain-id CHAIN_ID, --cid CHAIN_ID
   --config CONFIG       Config located in ./configs with the vnet data
-
 
 </pre>
 
@@ -59,7 +64,8 @@ options:
   - `python -m tenderly --config last.json test`
     - returns the current block number as an integer. 
 #### TODO:
- - add rest of API functions
+ - add the rest of tenderly's API functions
  - better state override handling 
- - state over-ride via config files
- - probably more ... 
+ - state over-ride via config files maybe? 
+ - package on PyPi so we can install with pip directly
+ - anything else? reach out and let me know! 
