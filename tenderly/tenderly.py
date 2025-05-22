@@ -12,7 +12,7 @@ from eth_typing import ChecksumAddress
 from eth_utils import to_checksum_address
 from typing_extensions import NamedTuple
 
-from lib import particle_http
+from utils import particle_http
 from utils.initialize_w3 import setup_w3_async
 from utils.json_helper import JsonHelper
 
