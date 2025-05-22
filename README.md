@@ -1,9 +1,9 @@
 # PyTender
 
 
-<p>
-Copyright [Darkerego](https://github.com/darkerego) ~  2025 ~ MIT License  
-</p>
+
+Copyright [darkergo](https://github.com/darkerego)   
+<p>DarkerEgo, 2025, Licensed under MIT</p>
 
 ## tenderly lib & cli tool in python
 
