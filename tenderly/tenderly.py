@@ -48,10 +48,9 @@ class BadHttpStatus(Exception):
 
 
 async def parse_response(resp: httpx.Response):
-
     # debug_data = {'http_status': f"{resp.status_code}", 'response': resp.json()}
 
-    if resp.status_code >= 200 <400:
+    if resp.status_code >= 200 < 400:
         return resp.json()
     raise BadHttpStatus(resp.status_code)
 
@@ -312,24 +311,22 @@ class TenderlyVnet:
 
 
 class TenderlyAsyncWeb3(web3.AsyncWeb3):
-   def __init__(self, w3: web3.AsyncWeb3):
-       self._w3 = w3
-       super().__init__()
+    def __init__(self, w3: web3.AsyncWeb3):
+        self._w3 = w3
+        super().__init__()
 
 
 class TenderlyWrapped(TenderlyAsyncWeb3):
     def __init__(self, *args, **kwargs):
         TenderlyAsyncWeb3.__init__(*args, **kwargs)
 
-
-def cli_main():
-    dotenv.load_dotenv()
+def get_args():
     cli_args = argparse.ArgumentParser()
     cli_args.add_argument('--debug', action='store_true', help='Enable intensely verbose debug data.')
     cli_args.add_argument('--chain-id', '--cid', dest='chain_id', type=int, default=8453)
     cli_args.add_argument('--config', type=str, help='Config located in ./configs with the vnet data')
     subparsers = cli_args.add_subparsers(dest='command')
-    create = subparsers.add_parser('create', help='Create a new virtual forked nnetwork')
+    create = subparsers.add_parser('create', help='Create a new virtual forked network')
     create.add_argument('slug', type=str)
     #  create.add_argument('cid', type=int, default=1)
     create.add_argument('--name', type=str, default=None)
@@ -348,15 +345,23 @@ def cli_main():
     evm_clock.add_argument('evm_command', type=str, choices=['forward'])
     evm_clock.add_argument('difference', type=int)
     subparsers.add_parser('test', help='Test a vnet with AsyncWeb3. Perform a few view only calls.')
+    return cli_args.parse_args()
 
-    cli_args = cli_args.parse_args()
-
+def cli_main(non_interactive: bool = False, _cli_args: argparse.Namespace = None) -> TenderlyVnet | None:
+    dotenv.load_dotenv()
+    if not _cli_args:
+        cli_args = get_args()
+    else:
+        assert isinstance(_cli_args, argparse.Namespace)
+        cli_args = _cli_args
     # asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     asyncio.get_event_loop_policy()
     if not cli_args.debug:
         asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     print('[+] Event loop: ', asyncio.get_event_loop())
     api = TenderlyVnet(debug=cli_args.debug, cid=cli_args.chain_id)
+    if non_interactive:
+        return api
     if cli_args.command == 'create':
         coro = api.create_vnet(cli_args.slug, cli_args.block, cli_args.name)
     elif cli_args.command == 'get':
@@ -389,8 +394,11 @@ def cli_main():
     ret = asyncio.run(api.main(coro, config=cli_args.config))
     if ret:
         pprint.pprint(ret)
+        return None
     else:
         print('[!] Failed to execute command: %s' % cli_args.command)
+        return None
+
 
 if __name__ == '__main__':
     cli_main()
