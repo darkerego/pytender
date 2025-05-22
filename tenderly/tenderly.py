@@ -13,6 +13,7 @@ from eth_utils import to_checksum_address
 from typing_extensions import NamedTuple
 
 from lib import particle_http
+from utils.initialize_w3 import setup_w3_async
 from utils.json_helper import JsonHelper
 
 TENDERLY_USER = os.environ.get('TENDERLY_USER')
@@ -67,7 +68,8 @@ class TenderlyVnet:
         self.access_key = access_key
         self.cid = cid
         self.debug = debug
-        self._w3: web3.AsyncWeb3 | None = None
+        self._w3_live: web3.AsyncWeb3 | None = None
+        self._w3_tenderly: web3.AsyncWeb3 | None = None
         self.session = httpx.AsyncClient(headers=self.headers)
         self.a_initialized = False
         self.current_vnet: VirtualNetwork | None = None
@@ -82,9 +84,12 @@ class TenderlyVnet:
             pass
 
         if not self.a_initialized:
-            self._w3 = await particle_http.create_w3(self.cid)
-            print('[+] Connected to: %s' % await self._w3.eth.chain_id)
+            self._w3_live = await particle_http.create_w3(cid=self.cid)
+            print('[+] Particle LIVE rpc Connected to: %s' % await self._w3_live.eth.chain_id)
+            self._w3_tenderly = await setup_w3_async(self.current_vnet.admin_rpc)
+            print('[+] Tenderly VIRTUAL rpc Connected to: %s' % await self._w3_tenderly.eth.chain_id)
             print('[+] Debug: %s ' % self.debug)
+            self.a_initialized = True
 
     @property
     def headers(self):
@@ -96,7 +101,20 @@ class TenderlyVnet:
 
     @property
     def w3(self):
-        return self._w3
+        """
+        WARNING: This is a REAL LIVE rpc! It's here for convenience!
+        :return:  AsyncWeb3 instance connected to LIVE network
+        """
+        return self._w3_live
+
+    @property
+    def w3_tenderly(self):
+        """
+        NOTICE: this method returns an initialized AsyncWeb3 instance connected to a Tenderly virtual network,
+        not to confused with the w3_live method of this class!
+        :return:  AsyncWeb3 instance connected to Tenderly VIRTUAL network
+        """
+        return self._w3_tenderly
 
     @property
     def base_url(self):
@@ -153,9 +171,17 @@ class TenderlyVnet:
         decimals = token.functions.decimals().call()
         return await self.set_erc20_balance(account_address, token_address, int(new_balance * 10 ** decimals))
 
-    async def send_transaction(self, vnet_id: str, from_address: ChecksumAddress, to_address: ChecksumAddress,
-                               gas: int, gas_price: int, ether_value: int, call_data: str,
-                               state_overrides: dict = None, block_overrides: dict = None):
+    async def send_transaction(self,
+                               vnet_id: str,
+                               from_address: ChecksumAddress,
+                               to_address: ChecksumAddress,
+                               gas: int,
+                               gas_price: int,
+                               ether_value: int,
+                               call_data: str,
+                               state_overrides: dict = None,
+                               block_overrides: dict = None
+                               ):
         """
 
         :param vnet_id:
@@ -281,6 +307,9 @@ class TenderlyVnet:
         await asyncio.sleep(1)
         return _ret
 
+    async def test_virtual_net_web3(self) -> int:
+        return await self.w3_tenderly.eth.get_block_number()
+
 
 class TenderlyAsyncWeb3(web3.AsyncWeb3):
    def __init__(self, w3: web3.AsyncWeb3):
@@ -318,6 +347,7 @@ def cli_main():
     evm_clock = subparsers.add_parser('clock', help='Change various evm global attributes such as block time')
     evm_clock.add_argument('evm_command', type=str, choices=['forward'])
     evm_clock.add_argument('difference', type=int)
+    subparsers.add_parser('test', help='Test a vnet with AsyncWeb3. Perform a few view only calls.')
 
     cli_args = cli_args.parse_args()
 
@@ -347,6 +377,13 @@ def cli_main():
             coro = api.increase_evm_time(cli_args.difference)
         else:
             raise ValueError('Unknown evm command: %s ' % cli_args.evm_command)
+    elif cli_args.command == 'test':
+        """
+        Example of how to use the virtual network with web3.AsyncWeb3. Much easier than manually 
+        crafting a call via `send_transaction` method of this class.
+        """
+        print('[+] Testing `get_block_number`... should return an integer: ')
+        coro = api.test_virtual_net_web3()
     else:
         raise ValueError("Unknown command: %s" % cli_args.command)
     ret = asyncio.run(api.main(coro, config=cli_args.config))
