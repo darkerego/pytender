@@ -54,7 +54,10 @@ options:
   - `python -m tenderly get --latest`
 - fund an account with 10 Ether:
   - `python -m tenderly --config last.json fund 0x1234567890123456789012345678901234567890` 10
-
+- Test the virtual network via web3.AsyncWeb3:
+  - notice: automatically created and available via `TenderlyVnet.w3_tenderly` helper function  
+  - `python -m tenderly --config last.json test`
+    - returns the current block number as an integer. 
 #### TODO:
  - add rest of API functions
  - better state override handling 
