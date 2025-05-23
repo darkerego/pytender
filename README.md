@@ -17,6 +17,9 @@ Copyright [darkergo](https://github.com/darkerego)
   - Started writing some basic tests
     - also intended to serve as examples of how one may implement 
     this as a library for another program.
+  - add logic for handling initial start, when there is no saved 
+  vnet config, which warns the user and prints a helpful message 
+  explaining how to set that up. 
 
 
 #### Installation

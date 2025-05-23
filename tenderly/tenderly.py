@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import os
 import pprint
+import sys
 import time
 
 import dotenv
@@ -85,7 +86,14 @@ class TenderlyVnet:
         if not self.a_initialized:
             self._w3_live = await particle_http.create_w3(cid=self.cid)
             print('[+] Particle LIVE rpc Connected to: %s' % await self._w3_live.eth.chain_id)
-            self._w3_tenderly = await setup_w3_async(self.current_vnet.admin_rpc)
+            if self.current_vnet is None:
+                print('[!] Warning: no vnet is currently configured to connect to. Please run '
+                      'with, for example to save the most recently created vnet:'
+                      '`python -m tenderly get --latest --save last.json`, '
+                      'then you can load that with `python -m tenderly --config last.json` [command]', file=sys.stderr)
+                self._w3_tenderly = None
+            else:
+                self._w3_tenderly = await setup_w3_async(self.current_vnet.public_rpc)
             print('[+] Tenderly VIRTUAL rpc Connected to: %s' % await self._w3_tenderly.eth.chain_id)
             print('[+] Debug: %s ' % self.debug)
             self.a_initialized = True
