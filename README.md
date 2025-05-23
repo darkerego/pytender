@@ -7,6 +7,18 @@ Copyright [darkergo](https://github.com/darkerego)
 
 ## tenderly lib & cli tool in python
 
+#### Changelog
+
+- May 23rd, 2025
+  - Add changelog
+  - created `TenderlyArgs` class, a wrapper around `argparse.Namespace`, 
+    - intended to be used non-interactively, i.e. when using this as a library,
+    rather than a cli tool.
+  - Started writing some basic tests
+    - also intended to serve as examples of how one may implement 
+    this as a library for another program.
+
+
 #### Installation
 
 - Edit .env.empty

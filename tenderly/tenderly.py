@@ -320,6 +320,37 @@ class TenderlyWrapped(TenderlyAsyncWeb3):
     def __init__(self, *args, **kwargs):
         TenderlyAsyncWeb3.__init__(*args, **kwargs)
 
+
+
+class TenderlyArgs(argparse.Namespace):
+    """
+    This is intended to be used interactively by calling `cli_main(True, TenderlyArgs(...))`,
+    it's simply a wrapper that inherits from `argparse.Namespace`, accepts the most basic
+    args required to make this work assuming your .env file is set up correctly, however, you
+    can pass whatever args you'd like to `kwargs` and this class will should operate exactly as
+    if it had been called from the command line.
+
+    WARNING: This is alpha. I didn't test thoroughly yet.
+    """
+    def __init__(self, debug: bool = False, chain_id: int = 8453, config: str = 'last.json', **kwargs: dict) -> None:
+        self.debug = debug
+        self.chain_id = chain_id
+        self.config = config
+        super().__init__(**kwargs)
+
+        """
+        
+        :param kwargs: args: {debug, chain_id, config}, {command: {create, [slug,  name, block], 
+        {get: [vnet_id, latest, save], {get: [vnet_id, latest, save]}, {fund: [account, amount, token]}
+        {clock: [evm_command,difference]}, {test}}  
+        """
+        if len(kwargs.items()):
+            for k,v in kwargs.items():
+                setattr(self, k, v)
+        if self.debug:
+            pprint.pprint(vars(self))
+
+
 def get_args():
     cli_args = argparse.ArgumentParser()
     cli_args.add_argument('--debug', action='store_true', help='Enable intensely verbose debug data.')
@@ -347,13 +378,15 @@ def get_args():
     subparsers.add_parser('test', help='Test a vnet with AsyncWeb3. Perform a few view only calls.')
     return cli_args.parse_args()
 
-def cli_main(non_interactive: bool = False, _cli_args: argparse.Namespace = None) -> TenderlyVnet | None:
+def tenderly_main(non_interactive: bool = False, _cli_args: argparse.Namespace | TenderlyArgs = None) -> TenderlyVnet | None:
     dotenv.load_dotenv()
     if not _cli_args:
         cli_args = get_args()
     else:
-        assert isinstance(_cli_args, argparse.Namespace)
-        cli_args = _cli_args
+        if isinstance(_cli_args, argparse.Namespace) or isinstance(_cli_args, TenderlyArgs):
+            cli_args = _cli_args
+        else:
+            raise TypeError('Invalid CLI arguments')
     # asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     asyncio.get_event_loop_policy()
     if not cli_args.debug:
@@ -375,7 +408,6 @@ def cli_main(non_interactive: bool = False, _cli_args: argparse.Namespace = None
             else:
                 coro = api.get_all_vnet()
     elif cli_args.command == 'fund':
-
         coro = api.set_balance(cli_args.token, cli_args.account, cli_args.amount)
     elif cli_args.command == 'clock':
         if cli_args.evm_command == 'forward':
@@ -401,4 +433,4 @@ def cli_main(non_interactive: bool = False, _cli_args: argparse.Namespace = None
 
 
 if __name__ == '__main__':
-    cli_main()
+    tenderly_main()
