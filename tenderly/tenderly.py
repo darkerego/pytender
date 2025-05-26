@@ -1,5 +1,6 @@
 import argparse
 import asyncio
+import json
 import os
 import pprint
 import sys
@@ -94,7 +95,7 @@ class TenderlyVnet:
                 self._w3_tenderly = None
             else:
                 self._w3_tenderly = await setup_w3_async(self.current_vnet.public_rpc)
-            print('[+] Tenderly VIRTUAL rpc Connected to: %s' % await self._w3_tenderly.eth.chain_id)
+                print('[+] Tenderly VIRTUAL rpc Connected to: %s' % await self._w3_tenderly.eth.chain_id)
             print('[+] Debug: %s ' % self.debug)
             self.a_initialized = True
 
@@ -128,7 +129,7 @@ class TenderlyVnet:
         return f"https://api.tenderly.co/api/v1/account/{self.account}/project/{self.project}/vnets"
 
     async def post(self, url: str, payload: dict) -> dict | list:
-        response = await self.session.post(url, json=payload, headers=self.headers)
+        response = await self.session.post(url, json=json.loads(json.dumps(payload)), headers=self.headers)
         self.http_id_counter += 1
         return await parse_response(response)
 
@@ -303,8 +304,8 @@ class TenderlyVnet:
                 "verification_visibility": "bytecode"
             }
         }
-        response = await self.session.post(url, json=payload, headers=self.headers)
-        return response.json()
+        response = await self.post(url, payload)
+        return response
 
     async def main(self, _coro: asyncio.coroutines, config: str = None):
         if config:

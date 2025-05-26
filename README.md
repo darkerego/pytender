@@ -9,6 +9,13 @@ Copyright [darkergo](https://github.com/darkerego)
 
 #### Changelog
 
+- May 25th, 2025
+  - Notice: there's a bug somewhere, for some reason if you try 
+   to create a new vnet by calling as a module `python3 -m tenderly` 
+   it may fail, in that case, it does however work fine calling directly, 
+   not sure why, trying to debug that, for now, that's a workaround 
+  
+
 - May 23rd, 2025
   - Add changelog
   - created `TenderlyArgs` class, a wrapper around `argparse.Namespace`, 
